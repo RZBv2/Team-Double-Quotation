@@ -326,10 +326,10 @@ class DatabaseManager:
         try:
             student_accounts = [
                 ('rzb' or '0712340012101011', '101011', 'Md. Razab Ali'),
-                ('0712340012101028', '101028', 'Sakubul Hasan'),
-                ('0712340012101037', '101037', 'Sanjida Emros'),
-                ('0712340012101045', '101045', 'Polash Ali'),
-                ('0712340012101046', '101046', 'Raja Hossein')
+                ('sakib' or '0712340012101028', '101028', 'Sakubul Hasan'),
+                ('sanjida' or '0712340012101037', '101037', 'Sanjida Emros'),
+                ('polash' or '0712340012101045', '101045', 'Polash Ali'),
+                ('raja' or '0712340012101046', '101046', 'Raja Hossein')
             ]
             for uname, pwd, fname in student_accounts:
                 hashed_pw, pw_salt = hash_password(pwd)
@@ -344,8 +344,20 @@ class DatabaseManager:
         exam_count = cursor.fetchone()[0]
         
         if exam_count == 0:
-            cursor.execute('SELECT id FROM users WHERE username="teacher"')
-            teacher_id = cursor.fetchone()[0]
+            cursor.execute('SELECT id FROM users WHERE username="tcr111"')
+            teacher_row = cursor.fetchone()
+            if teacher_row:
+                teacher_id = teacher_row[0]
+            else:
+                # Fallback: create a default teacher if none exists
+                hashed_pw, pw_salt = hash_password('demo123')
+                cursor.execute('''
+                    INSERT INTO users (username, password, password_salt, role, full_name)
+                    VALUES (?, ?, ?, ?, ?)
+                ''', ('tcr111', hashed_pw, pw_salt, 'teacher', 'Demo Teacher'))
+                conn.commit()
+                cursor.execute('SELECT id FROM users WHERE username="tcr111"')
+                teacher_id = cursor.fetchone()[0]
             
             exam1_questions = [
                 {
@@ -495,7 +507,7 @@ class ModernButton(tk.Button):
 class RoleSelectionWindow:
     def __init__(self, root):
         self.root = root
-        self.root.title("Online Exam System")
+        self.root.title("Online Exam Simulator with Anti-Cheat System")
         self.root.geometry("760x520")
         self.root.configure(bg=COLORS['light'])
         self.root.resizable(False, False)
